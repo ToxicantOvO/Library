@@ -1,6 +1,7 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8"
 	pageEncoding="UTF-8"%>
 <%@ page import="java.util.List,com.domain.*"%>
+<%@ page import="java.util.ArrayList" %>
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <html>
 <head>
@@ -27,45 +28,42 @@ Smartphone Compatible web template, free webdesigns for Nokia, Samsung, LG, Sony
 	jQuery(document).ready(function($) {
 		$(".scroll").click(function(event) {
 			event.preventDefault();
-			$('html,body').animate({
-				scrollTop : $(this.hash).offset().top
-			}, 1200);
+			$('html,body').animate({scrollTop : $(this.hash).offset().top}, 1200);
 		});
 	});
 </script>
-<title>Insert title here</title>
-<style type="text/css">
-#list {
-	margin-top: 20px;
-}
-#list {
-	color: #FFF;
-	font-size:15px;
-}
+    <title>Book List</title>
+    <style type="text/css">
+        #list {
+            margin-top: 20px;
+        }
+        #list {
+            color: #FFF;
+            font-size:15px;
+        }
 
 
-#top{
-	width: 150px;
-	float: right;
-	margin-top: -60px;
-}
+        #top{
+            width: 150px;
+            float: right;
+            margin-top: -60px;
+        }
 
-#top a {
-	color: #0FF;
-	font-size:15px;
-}
+        #top a {
+            color: #0FF;
+            font-size:15px;
+        }
 
-#top a:hover {
-	color: #909;
-}
-
-</style>
+        #top a:hover {
+            color: #909;
+        }
+    </style>
 </head>
 
 
 <body>
 	<%
-		String user_name = (String) request.getSession().getAttribute("user_name");
+		String user_name = (String) request.getSession().getAttribute("reader_name");
 	%>
 	<!--banner-->
 	<div id="home" class="banner">
@@ -94,7 +92,6 @@ Smartphone Compatible web template, free webdesigns for Nokia, Samsung, LG, Sony
 						}
 					%>
 			</div>
-
 			<div class="container" id="list">
 				<nav class="cl-effect-1"> <span class="menu"><img src="images/nav-icon.png" alt="" /></span>
 					<table align="center" border="1" width="100%" style="border-collapse: separate; border-spacing: 20px;">
@@ -102,6 +99,7 @@ Smartphone Compatible web template, free webdesigns for Nokia, Samsung, LG, Sony
 							<td>Title</td>
 							<td>Author</td>
 							<td>Publishing</td>
+							<td>Status</td>
 							<td>Remaining</td>
 							<td>Location</td>
 							<td>Operation</td>
@@ -111,16 +109,100 @@ Smartphone Compatible web template, free webdesigns for Nokia, Samsung, LG, Sony
 							response.setCharacterEncoding("UTF-8");
 							response.setContentType("text/html;charset=UTF-8");
 							List<Book> bookList = (List<Book>) request.getAttribute("bookList");
+							int count = 0;
+							Book tem = bookList.get(0);
 							for (Book temp : bookList) {
+							    if (temp.getIsbn().equals(tem.getIsbn())) {
+							        if (!temp.getBorrow_flag().equals("1") && temp.getPredetermine_id() == null){
+										count++;
+									}
+
+								}
+								else{
+							        if (tem.getCan_borrow().equals("1")){
+							            tem.setCan_borrow("Can Borrow");
+									}
+									else if(tem.getCan_borrow().equals("0")) {
+							            tem.setCan_borrow("Can't Borrow");
+									}
 						%>
 
 						<tr>
-							<td><%=temp.getBook_name()%></td>
-							<td><%=temp.getAuthor()%></td>
-							<td><%=temp.getPublishing()%></td>
-							<td><%=temp.getNum()%></td>
-							<td><%=temp.getLocation()%></td>
-							<%
+							<td><%=tem.getBook_name()%></td>
+							<td><%=tem.getAuthor()%></td>
+							<td><%=tem.getPublishing()%></td>
+							<td><%=tem.getCan_borrow()%></td>
+							<td><%=count%></td>
+							<td><%=tem.getLocation()%></td>
+
+
+						<%
+							if (user_name != null && !temp.getCan_borrow().equals("Can't Borrow")) {
+						%>
+						<td>
+							<form action="BorrowInforServlet" method="post">
+								<input type="hidden" name="book_isbn" value="<%=temp.getIsbn()%>" />
+								<input type="hidden" name="num" value="<%=count%>" />
+								<input type="hidden" name="user_name" value="<%=user_name%>" />
+								<button type="submit">Reserve</button>
+							</form>
+						</td>
+						</tr>
+						<%
+						} else {
+						%>
+						<td></td>
+						<%
+							}
+						%>
+						<%
+									tem = temp;
+									count = 1;
+							    }
+								if (temp == bookList.get(bookList.size() - 1)){
+									if (tem.getCan_borrow().equals("1")){
+										tem.setCan_borrow("Can Borrow");
+									}
+									else if(tem.getCan_borrow().equals("0")) {
+										tem.setCan_borrow("Can't Borrow");
+									}
+						%>
+						<tr>
+							<td><%=tem.getBook_name()%></td>
+							<td><%=tem.getAuthor()%></td>
+							<td><%=tem.getPublishing()%></td>
+							<td><%=tem.getCan_borrow()%></td>
+							<td><%=count%></td>
+							<td><%=tem.getLocation()%></td>
+
+
+						<%
+							if (user_name != null && !temp.getCan_borrow().equals("Can't Borrow")) {
+						%>
+						<td>
+							<form action="BorrowInforServlet" method="post">
+								<input type="hidden" name="book_isbn" value="<%=temp.getIsbn()%>" />
+								<input type="hidden" name="num" value="<%=count%>" />
+								<input type="hidden" name="user_name" value="<%=user_name%>" />
+								<button type="submit">Reserve</button>
+							</form>
+						</td>
+						</tr>
+						<%
+						} else {
+						%>
+						<td></td>
+						<%
+							}
+						%>
+						<%
+								count = 0;
+							    }
+						%>
+						<%
+							}
+						%>
+						<%-- 	<%
 								if (user_name != null) {
 							%>
 							<td>
@@ -138,11 +220,7 @@ Smartphone Compatible web template, free webdesigns for Nokia, Samsung, LG, Sony
 							<td></td>
 							<%
 								}
-							%>
-						</tr>
-						<%
-							}
-						%>
+							%> --%>
 					</table>
 				</nav>
 			</div>
@@ -154,7 +232,6 @@ Smartphone Compatible web template, free webdesigns for Nokia, Samsung, LG, Sony
 				});
 			</script>
 			<!-- script-for-menu -->
-
 		</div>
 	</div>
 	<!---->
